@@ -299,6 +299,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
 
     // Face unlock
     private static final boolean mCustomFaceUnlockSupported = FaceUnlockUtils.isFaceUnlockSupported();
+    private final boolean mFingerprintWakeAndUnlock;
 
     /**
      * Short delay before restarting fingerprint authentication after a successful try. This should

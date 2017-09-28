@@ -4997,6 +4997,18 @@ public final class Settings {
         public static final String AMBIENT_LIGHT_PULSE_FOR_ALL = "ambient_light_pulse_for_all";
 
         /**
+         * Applications list where heasdup should't show
+         * @hide
+         */
+        public static final String HEADS_UP_STOPLIST_VALUES = "heads_up_stoplist_values";
+
+         /**
+         * Which applications to disable heads up notifications for
+         * @hide
+         */
+        public static final String HEADS_UP_BLACKLIST_VALUES = "heads_up_blacklist_values";
+
+        /**
          * Direction of repeat animations of Ambient edge light
          * 0 is restart
          * 1 is reverse
@@ -5302,6 +5314,8 @@ public final class Settings {
             PRIVATE_SETTINGS.add(OMNI_DOZE_BRIGHTNESS);
             PRIVATE_SETTINGS.add(FOOTER_TEXT_SHOW);
             PRIVATE_SETTINGS.add(SHOW_FOURG);
+            PRIVATE_SETTINGS.add(HEADS_UP_STOPLIST_VALUES);
+            PRIVATE_SETTINGS.add(HEADS_UP_BLACKLIST_VALUES);
         }
 
         /**

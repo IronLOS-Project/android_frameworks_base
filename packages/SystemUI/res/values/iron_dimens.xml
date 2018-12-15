@@ -30,7 +30,7 @@
     <!-- Margin on the left side of the heads up notification -->
     <dimen name="heads_up_status_bar_padding_start">0dp</dimen>
 
-    <dimen name="current_weather_image_size">42dp</dimen>
+    <dimen name="current_weather_image_size">30dp</dimen>
 
     <!-- Weather condition icon  -->
     <dimen name="weather_icon_size">24dp</dimen>

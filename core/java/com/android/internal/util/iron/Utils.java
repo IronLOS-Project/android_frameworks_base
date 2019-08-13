@@ -23,7 +23,6 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.app.NotificationManager;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -239,7 +238,8 @@ public class Utils {
     public static void takeScreenshot(boolean full) {
         IWindowManager wm = WindowManagerGlobal.getWindowManagerService();
         try {
-            wm.sendCustomAction(new Intent(INTENT_SCREENSHOT));
+//            wm.sendCustomAction(new Intent(INTENT_SCREENSHOT));
+            wm.takeAlternativeScreenshot();
         } catch (RemoteException e) {
             e.printStackTrace();
         }

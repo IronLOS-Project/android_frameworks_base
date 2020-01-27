@@ -23,6 +23,7 @@ import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.biometrics.BiometricSourceType;
@@ -32,6 +33,7 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
@@ -87,6 +89,9 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     private LockPatternUtils mLockPatternUtils;
 
     private Timer mBurnInProtectionTimer;
+
+    private FODAnimation mFODAnimation;
+    private boolean mIsRecognizingAnimEnabled;
 
     private IFingerprintInscreenCallback mFingerprintInscreenCallback =
             new IFingerprintInscreenCallback.Stub() {
@@ -145,6 +150,9 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         @Override
         public void onKeyguardVisibilityChanged(boolean showing) {
             mIsKeyguard = showing;
+            if (mFODAnimation != null) {
+                mFODAnimation.setAnimationKeyguard(mIsKeyguard);
+            }
             if (!showing) {
                 hide();
             } else {
@@ -152,7 +160,6 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
             }
         }
 
-        @Override
         public void onKeyguardBouncerChanged(boolean isBouncer) {
             mIsBouncer = isBouncer;
             if (mUpdateMonitor.isFingerprintDetectionRunning()) {
@@ -163,6 +170,9 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
                 }
             } else {
                 hide();
+            }
+            if (mFODAnimation != null) {
+                mFODAnimation.setAnimationKeyguard(mIsBouncer);
             }
         }
 
@@ -262,6 +272,11 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
 
         mUpdateMonitor = Dependency.get(KeyguardUpdateMonitor.class);
         mUpdateMonitor.registerCallback(mMonitorCallback);
+        
+        mIsRecognizingAnimEnabled = Settings.System.getInt(mContext.getContentResolver(),
+            Settings.System.FOD_RECOGNIZING_ANIMATION, 0) != 0;
+
+        mFODAnimation = new FODAnimation(context, mPositionX, mPositionY);
     
         updateCutoutFlags();
         Dependency.get(ConfigurationController.class).addCallback(this);
@@ -290,14 +305,19 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN && newIsInside) {
             showCircle();
+            if (mIsRecognizingAnimEnabled) {
+                mFODAnimation.showFODanimation();
+            }
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             hideCircle();
+            mFODAnimation.hideFODanimation();
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
             return true;
         }
 
+        mFODAnimation.hideFODanimation();
         return false;
     }
 
@@ -468,6 +488,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
 
         if (mIsDreaming) {
             mParams.y += mDreamingOffsetY;
+            mFODAnimation.updateParams(mParams.y);
         }
 
         mWindowManager.updateViewLayout(this, mParams);
@@ -550,6 +571,74 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         if (mCutoutMasked != cutoutMasked){
             mCutoutMasked = cutoutMasked;
             updatePosition();
+        }
+    }
+}
+
+class FODAnimation extends ImageView {
+
+    private Context mContext;
+    private int mAnimationPositionY;
+    private LayoutInflater mInflater;
+    private WindowManager mWindowManager;
+    private boolean mShowing = false;
+    private boolean mIsKeyguard;
+    private final AnimationDrawable recognizingAnim;
+    private final WindowManager.LayoutParams mAnimParams = new WindowManager.LayoutParams();
+
+    public FODAnimation(Context context, int mPositionX, int mPositionY) {
+        super(context);
+
+        mContext = context;
+        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mWindowManager = mContext.getSystemService(WindowManager.class);
+
+        mAnimParams.height = mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_size);
+        mAnimParams.width = mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_size);
+
+        mAnimationPositionY = (int) Math.round(mPositionY - (mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_size) / 2));
+
+        mAnimParams.format = PixelFormat.TRANSLUCENT;
+        mAnimParams.type = WindowManager.LayoutParams.TYPE_VOLUME_OVERLAY; // it must be behind FOD icon
+        mAnimParams.flags =  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        mAnimParams.gravity = Gravity.TOP | Gravity.CENTER;
+        mAnimParams.y = mAnimationPositionY;
+
+        this.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        this.setBackgroundResource(R.drawable.fod_pulse_recognizing_white_anim);
+        recognizingAnim = (AnimationDrawable) this.getBackground();
+
+    }
+
+    public void updateParams(int mDreamingOffsetY) {
+        mAnimationPositionY = (int) Math.round(mDreamingOffsetY - (mContext.getResources().getDimensionPixelSize(R.dimen.fod_animation_size) / 2));
+        mAnimParams.y = mAnimationPositionY;
+    }
+
+    public void setAnimationKeyguard(boolean state) {
+        mIsKeyguard = state;
+    }
+
+    public void showFODanimation() {
+        if (mAnimParams != null && !mShowing && mIsKeyguard) {
+            mShowing = true;
+            mWindowManager.addView(this, mAnimParams);
+            recognizingAnim.start();
+        }
+    }
+
+    public void hideFODanimation() {
+        if (mShowing) {
+            mShowing = false;
+            if (recognizingAnim != null) {
+                this.clearAnimation();
+                recognizingAnim.stop();
+                recognizingAnim.selectDrawable(0);
+            }
+            if (this.getWindowToken() != null) {
+                mWindowManager.removeView(this);
+            }
         }
     }
 }

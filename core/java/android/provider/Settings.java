@@ -5005,6 +5005,11 @@ public final class Settings {
         public static final String RIGHT_VERTICAL_BACK_SWIPE_APP_ACTIVITY_ACTION = "right_vertical_back_swipe_app_activity_action";
 
         /**
+         * @hide
+         */
+        public static final String AMBIENT_LIGHT_PULSE_FOR_ALL = "ambient_light_pulse_for_all";
+
+        /**
          * Change quick settings tiles animation style
          *
          * @hide

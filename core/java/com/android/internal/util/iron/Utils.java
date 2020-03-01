@@ -209,6 +209,11 @@ public class Utils {
         }
     }
 
+    // Adv. Gestures Utls
+    public static void killForegroundApp() {
+        FireActions.killForegroundApp();
+    }
+
     public static void sendKeycode(int keycode) {
         long when = SystemClock.uptimeMillis();
         final KeyEvent evDown = new KeyEvent(when, when, KeyEvent.ACTION_DOWN, keycode, 0,
@@ -233,6 +238,17 @@ public class Utils {
             }
         }, 20);
     }
+
+	public static void killForegroundApp() {
+            IStatusBarService service = getStatusBarService();
+            if (service != null) {
+                try {
+                    service.killForegroundApp();
+                } catch (RemoteException e) {
+                    // do nothing.
+                }
+            }
+        }
 
     // Method to detect whether an overlay is enabled or not
     public static boolean isThemeEnabled(String packageName) {

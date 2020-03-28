@@ -126,4 +126,7 @@
     <java-symbol type="string" name="gaming_mode_disabled_toast" />
     <!-- Enable face auth only when swiping security view -->
     <java-symbol type="bool" name="config_faceAuthOnlyOnSecurityView" />
+
+  <!-- Enable face auth only when swiping security view -->
+  <java-symbol type="bool" name="config_faceAuthOnlyOnSecurityView" />
 </resources>

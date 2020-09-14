@@ -39,4 +39,7 @@
     <string name="applock_fingerprint">&#160;or your fingerprint to unlock</string>
     <string name="applock_credential">&#160;to unlock</string>
     <string name="applock_unlock">Unlock</string>
+
+   <!-- Change clockface -->
+    <string name="change_clock_face">Swipe to change the clock face</string>
 </resources>

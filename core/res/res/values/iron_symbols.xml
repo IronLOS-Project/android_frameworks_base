@@ -103,4 +103,7 @@
 
      <!-- -1 means use same as config_screenBrightnessDoze -->
      <java-symbol type="integer" name="config_screenBrightnessPulse" />
+
+    <!-- Ambient notification light color -->
+    <java-symbol type="integer" name="config_ambientNotificationDefaultColor" />
 </resources>

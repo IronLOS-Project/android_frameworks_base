@@ -18,4 +18,6 @@
     <!-- -1 means use same as config_screenBrightnessDoze -->
     <integer name="config_screenBrightnessPulse">-1</integer>
 
+    <!-- Default value for Ambient Pulse light color -->
+    <integer name="config_ambientNotificationDefaultColor">0xFF3980FF</integer>  
 </resources>

@@ -101,4 +101,6 @@
      <java-symbol type="style" name="Animation.Toast.SlideRightLeft" />
      <java-symbol type="style" name="Animation.Toast.SlideLeftRight" />
 
+     <!-- -1 means use same as config_screenBrightnessDoze -->
+     <java-symbol type="integer" name="config_screenBrightnessPulse" />
 </resources>

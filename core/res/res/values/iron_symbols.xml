@@ -136,4 +136,7 @@
     <java-symbol type="string" name="gaming_mode_notification_content" />
     <java-symbol type="string" name="gaming_mode_enabled_toast" />
     <java-symbol type="string" name="gaming_mode_disabled_toast" />
+
+    <!-- Default fod pressed icon -->
+    <java-symbol type="integer" name="config_fod_pressed_color" />
 </resources>

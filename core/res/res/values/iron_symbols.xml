@@ -103,4 +103,7 @@
 
      <!-- -1 means use same as config_screenBrightnessDoze -->
      <java-symbol type="integer" name="config_screenBrightnessPulse" />
+
+  <!-- Whether to show a custom view for FOD -->
+  <java-symbol type="bool" name="config_needCustomFODView" />
 </resources>

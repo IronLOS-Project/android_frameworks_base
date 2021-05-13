@@ -82,6 +82,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     private final WindowManager mWindowManager;
 
     private IFingerprintInscreen mFingerprintInscreenDaemon;
+    private FODIconView mFODIcon;
 
     private int mColorBackground;
     private int mDreamingOffsetY;
@@ -197,6 +198,9 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
             updateStyle();
             if (mIsRecognizingAnimEnabled) {
                 mFODAnimation.setAnimationKeyguard(mIsKeyguard);
+            }
+            if (mFODIcon != null) {
+                mFODIcon.setIsKeyguard(mIsKeyguard);
             }
         }
 
@@ -329,6 +333,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
             mFODAnimation = new FODAnimation(mContext, mWindowManager, mPositionX, mPositionY);
         }
 
+        mFODIcon = new FODIconView(mContext, mSize, mPositionX, mPositionY);
         mNavigationBarSize = res.getDimensionPixelSize(R.dimen.navigation_bar_size);
 
         mDreamingMaxOffset = (int) (mSize * 0.1f);
@@ -527,7 +532,6 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     public void hideCircle() {
         mIsCircleShowing = false;
 
-        setImageResource(R.drawable.fod_icon_default);
         invalidate();
 
         dispatchRelease();
@@ -564,6 +568,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
             return;
         }
 
+        mFODIcon.show();
         updatePosition();
 
         setVisibility(View.VISIBLE);
@@ -571,6 +576,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     }
 
     public void hide() {
+        mFODIcon.hide();
         setVisibility(View.GONE);
         hideCircle();
         dispatchHide();
@@ -642,10 +648,14 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         }
 
         mWindowManager.updateViewLayout(this, mParams);
+        FODIconView fODIconView = this.mFODIcon;
 
         if (mPressedView.getParent() != null) {
             mWindowManager.updateViewLayout(mPressedView, mPressedParams);
         }
+
+        WindowManager.LayoutParams layoutParams3 = this.mParams;
+        fODIconView.updatePosition(layoutParams3.x, layoutParams3.y);
     }
 
     private void setDim(boolean dim) {

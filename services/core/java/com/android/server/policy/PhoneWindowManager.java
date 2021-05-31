@@ -232,7 +232,6 @@ import dalvik.system.PathClassLoader;
 import lineageos.hardware.LineageHardwareManager;
 import lineageos.providers.LineageSettings;
 
-import org.lineageos.internal.buttons.LineageButtons;
 import org.lineageos.internal.util.ActionUtils;
 
 import java.io.File;

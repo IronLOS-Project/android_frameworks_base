@@ -55,7 +55,7 @@ import com.android.systemui.statusbar.notification.stack.NotificationStackScroll
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.util.InjectionInflationController;
-import com.android.internal.util.Iron.LineageButtons;
+import com.android.internal.util.iron.LineageButtons;
 
 import lineageos.providers.LineageSettings;
 

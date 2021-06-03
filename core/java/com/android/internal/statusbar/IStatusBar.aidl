@@ -239,5 +239,6 @@ oneway interface IStatusBar
      */
     void setBlockedGesturalNavigation(boolean blocked);
 
+    void toggleCameraFlash();
     void killForegroundApp();
 }

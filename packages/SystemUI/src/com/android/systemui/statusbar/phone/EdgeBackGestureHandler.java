@@ -868,6 +868,9 @@ public class EdgeBackGestureHandler extends CurrentUserTracker implements Displa
             case 13: // Kill app
                 Utils.killForegroundApp();
                 break;
+            case 14: // Switch recent app
+                Utils.switchToLastApp(mContext);
+                break;
         }
     }
 

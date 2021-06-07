@@ -5028,6 +5028,18 @@ public final class Settings {
         public static final String SWIPE_TO_SCREENSHOT = "swipe_to_screenshot";
 
         /**
+         * Whether footer #IronLOS text shows
+         * @hide
+         */
+        public static final String FOOTER_TEXT_SHOW = "footer_text_show";
+
+        /**
+         * QS footer text
+         * @hide
+         */
+        public static final String FOOTER_TEXT_STRING = "footer_text_string";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
@@ -5154,6 +5166,7 @@ public final class Settings {
             PRIVATE_SETTINGS.add(SCREEN_OFF_ANIMATION);
             PRIVATE_SETTINGS.add(OMNI_PULSE_BRIGHTNESS);
             PRIVATE_SETTINGS.add(OMNI_DOZE_BRIGHTNESS);
+            PRIVATE_SETTINGS.add(FOOTER_TEXT_SHOW);
         }
 
         /**

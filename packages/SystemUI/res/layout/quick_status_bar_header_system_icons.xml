@@ -22,7 +22,6 @@
     android:layout_height="@*android:dimen/quick_qs_offset_height"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:gravity="center"
     android:orientation="horizontal"
     android:clickable="true"
     android:paddingTop="@dimen/status_bar_padding_top" >
@@ -40,11 +39,20 @@
         android:layout_height="match_parent"
         android:minWidth="48dp"
         android:gravity="center_vertical|start"
+        android:layout_gravity="center_vertical|start"
         android:paddingStart="@dimen/status_bar_left_clock_starting_padding"
         android:paddingEnd="@dimen/status_bar_left_clock_end_padding"
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.StatusBar.Clock"
         systemui:showDark="false" />
+
+    <com.android.systemui.statusbar.policy.NetworkTraffic
+        android:id="@+id/network_traffic"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical|end"
+        android:layout_gravity="center_vertical|end"
+        android:visibility="gone" />
     </LinearLayout>
 
     <android.widget.Space
@@ -54,14 +62,16 @@
         android:layout_gravity="center_vertical|center_horizontal"
         android:visibility="gone" />
 
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:gravity="center_vertical|end" >
-
     <include layout="@layout/ongoing_privacy_chip" />
 
-    </LinearLayout>
+    <com.android.systemui.BatteryMeterView
+        android:id="@+id/battery"
+        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:gravity="center_vertical|end"
+        android:singleLine="true"
+        android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+        android:paddingStart="@dimen/status_bar_left_clock_starting_padding"
+        android:paddingEnd="@dimen/status_bar_left_clock_starting_padding" />
+
 </LinearLayout>

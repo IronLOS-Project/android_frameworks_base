@@ -63,8 +63,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class FODCircleView extends ImageView implements ConfigurationListener {
-    private static final int FADE_ANIM_DURATION = 125;
+    private static final int FADE_ANIM_DURATION = 250;
     private static final String DOZE_INTENT = "com.android.systemui.doze.pulse";
+
     private final int mPositionX;
     private final int mPositionY;
     private final int mSize;
@@ -87,7 +88,6 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     private boolean mIsCircleShowing;
     private boolean mIsDreaming;
     private boolean mIsKeyguard;
-    private boolean mTouchedOutside;
 
     private boolean mDozeEnabled;
     private boolean mFodGestureEnable;
@@ -318,8 +318,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         mParams.gravity = Gravity.TOP | Gravity.LEFT;
 
         mPressedParams.copyFrom(mParams);
-        mPressedParams.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND |
-                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
+        mPressedParams.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
 
         mParams.setTitle("Fingerprint on display");
         mPressedParams.setTitle("Fingerprint on display.touched");
@@ -375,12 +374,6 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         float y = event.getAxisValue(MotionEvent.AXIS_Y);
 
         boolean newIsInside = (x > 0 && x < mSize) && (y > 0 && y < mSize);
-        mTouchedOutside = false;
-
-        if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
-            mTouchedOutside = true;
-            return true;
-        }
 
         if (event.getAction() == MotionEvent.ACTION_DOWN && newIsInside) {
             showCircle();
@@ -460,7 +453,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     }
 
     public void showCircle() {
-        if (mFading || mTouchedOutside) return;
+        if (mFading) return;
         mIsCircleShowing = true;
 
         setKeepScreenOn(true);
@@ -485,6 +478,11 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
     }
 
     public void show() {
+        if (mUpdateMonitor.userNeedsStrongAuth()) {
+            // Keyguard requires strong authentication (not biometrics)
+            return;
+        }
+
         if (!mFodGestureEnable && !mUpdateMonitor.isScreenOn()) {
             // Keyguard is shown just after screen turning off
             return;

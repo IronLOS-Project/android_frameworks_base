@@ -27,8 +27,7 @@
     android:layout_gravity="center_horizontal"
     android:clipToPadding="false"
     android:orientation="vertical"
-    android:animateLayoutChanges="true"
-    android:layout_centerHorizontal="true">
+    android:animateLayoutChanges="true">
     <TextView
               android:id="@+id/title"
               android:layout_width="match_parent"

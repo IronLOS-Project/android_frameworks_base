@@ -37,9 +37,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.os.UserHandle;
 import android.provider.Settings;
-import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
@@ -58,6 +56,7 @@ import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardUpdateMonitorCallback;
 import com.android.systemui.Dependency;
 import com.android.systemui.R;
+import com.android.systemui.tuner.TunerService;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.ConfigurationController.ConfigurationListener;
 
@@ -68,8 +67,9 @@ import java.util.NoSuchElementException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class FODCircleView extends ImageView implements ConfigurationListener {
+public class FODCircleView extends ImageView implements TunerService.Tunable, ConfigurationListener {
     private static final String DOZE_INTENT = "com.android.systemui.doze.pulse";
+    private static final String FOD_GESTURE = "system:" + Settings.System.FOD_GESTURE;
     private final int mPositionX;
     private final int mPositionY;
     private final int mSize;
@@ -145,7 +145,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         @Override
         public void onFingerUp() {
             mHandler.post(() -> hideCircle());
-            if (mFodGestureEnable && mPressPending) {
+            if (mPressPending) {
                 mPressPending = false;
             }
         }
@@ -189,6 +189,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
                 mBurnInProtectionTimer.schedule(new BurnInProtectionTask(), 0, 60 * 1000);
             } else if (mBurnInProtectionTimer != null) {
                 mBurnInProtectionTimer.cancel();
+                updatePosition();
             }
         }
 
@@ -223,25 +224,28 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         }
 
         @Override
-        public void onStartedGoingToSleep(int why) {
-            if (mFodGestureEnable){
-                hideCircle();
-            }else{
+        public void onScreenTurnedOff() {
+            mScreenTurnedOn = false;
+            if (!mFodGestureEnable) {
                 hide();
+            } else {
+                hideCircle();
             }
         }
 
         @Override
-        public void onScreenTurnedOff() {
-            mScreenTurnedOn = false;
+        public void onStartedWakingUp() {
+            if (mUpdateMonitor.isFingerprintDetectionRunning()) {
+                show();
+            }
         }
 
         @Override
         public void onScreenTurnedOn() {
-            if (!mFodGestureEnable && mUpdateMonitor.isFingerprintDetectionRunning()) {
+            if (mUpdateMonitor.isFingerprintDetectionRunning() && !mFodGestureEnable) {
                 show();
             }
-            if (mFodGestureEnable && mPressPending) {
+            if (mPressPending) {
                 mHandler.post(() -> showCircle());
                 mPressPending = false;
             }
@@ -257,44 +261,8 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         }
     };
 
-    private class FodGestureSettingsObserver extends ContentObserver {
-        FodGestureSettingsObserver(Context context, Handler handler) {
-            super(handler);
-        }
-
-        void registerListener() {
-            mContext.getContentResolver().registerContentObserver(
-                    Settings.Secure.getUriFor(
-                    Settings.Secure.DOZE_ENABLED),
-                    false, this, UserHandle.USER_ALL);
-            mContext.getContentResolver().registerContentObserver(
-                    Settings.System.getUriFor(
-                    Settings.System.FOD_GESTURE),
-                    false, this, UserHandle.USER_ALL);
-            updateSettings();
-        }
-
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            super.onChange(selfChange, uri);
-            updateSettings();
-        }
-
-        public void updateSettings() {
-            mDozeEnabled = Settings.Secure.getIntForUser(
-                    mContext.getContentResolver(),
-                    Settings.Secure.DOZE_ENABLED, 1,
-                    UserHandle.USER_CURRENT) == 1;
-            mFodGestureEnable = Settings.System.getIntForUser(
-                    mContext.getContentResolver(),
-                    Settings.System.FOD_GESTURE, 1,
-                    UserHandle.USER_CURRENT) == 1;
-        }
-    }
-
     private boolean mCutoutMasked;
     private int mStatusbarHeight;
-    private FodGestureSettingsObserver mFodGestureSettingsObserver;
 
     public FODCircleView(Context context) {
         super(context);
@@ -326,7 +294,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
                  FODCircleView.class.getSimpleName());
 
         mWindowManager = mContext.getSystemService(WindowManager.class);
-        mIsFodAnimationAvailable = CustomUtils.isPackageInstalled(context,
+        mIsFodAnimationAvailable = Utils.isPackageInstalled(context,
                                     context.getResources().getString(
                                     com.android.internal.R.string.config_fodAnimationPackage));
         if (mIsFodAnimationAvailable) {
@@ -348,6 +316,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         mParams.type = WindowManager.LayoutParams.TYPE_DISPLAY_OVERLAY;
         mParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
         mParams.gravity = Gravity.TOP | Gravity.LEFT;
 
@@ -380,14 +349,20 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         mUpdateMonitor = Dependency.get(KeyguardUpdateMonitor.class);
         mUpdateMonitor.registerCallback(mMonitorCallback);
 
-        if (context.getResources().getBoolean(
-            com.android.internal.R.bool.config_supportsScreenOffInDisplayFingerprint)){
-            mFodGestureSettingsObserver = new FodGestureSettingsObserver(context, mHandler);
-            mFodGestureSettingsObserver.registerListener();
-        }
-    
         updateCutoutFlags();
+
         Dependency.get(ConfigurationController.class).addCallback(this);
+        Dependency.get(TunerService.class).addTunable(this, FOD_GESTURE,
+                Settings.Secure.DOZE_ENABLED);
+    }
+
+    @Override
+    public void onTuningChanged(String key, String newValue) {
+        if (key.equals(FOD_GESTURE)) {
+            mFodGestureEnable = TunerService.parseIntegerSwitch(newValue, false);
+        } else {
+            mDozeEnabled = TunerService.parseIntegerSwitch(newValue, true);
+        }
     }
 
     private CustomSettingsObserver mCustomSettingsObserver = new CustomSettingsObserver(mHandler);
@@ -549,7 +524,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
             return;
         }
 
-        if (!mFodGestureEnable && !mUpdateMonitor.isScreenOn()) {
+        if (!mUpdateMonitor.isScreenOn() && !mFodGestureEnable) {
             // Keyguard is shown just after screen turning off
             return;
         }
@@ -615,6 +590,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
 
         int rotation = defaultDisplay.getRotation();
         int cutoutMaskedExtra = mCutoutMasked ? mStatusbarHeight : 0;
+
         int x, y;
         switch (rotation) {
             case Surface.ROTATION_0:
@@ -710,6 +686,7 @@ public class FODCircleView extends ImageView implements ConfigurationListener {
         @Override
         public void run() {
             long now = System.currentTimeMillis() / 1000 / 60;
+
             // Let y to be not synchronized with x, so that we get maximum movement
             mDreamingOffsetY = (int) ((now + mDreamingMaxOffset / 3) % (mDreamingMaxOffset * 2));
             mDreamingOffsetY -= mDreamingMaxOffset;

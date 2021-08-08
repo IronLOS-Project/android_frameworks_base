@@ -64,7 +64,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.iron.Utils;
+import com.android.internal.util.iron.FodUtils;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardUpdateMonitorCallback;
@@ -426,7 +426,7 @@ public class KeyguardBottomAreaView extends FrameLayout implements View.OnClickL
     }
 
     private boolean hasInDisplayFingerprint() {
-        return Utils.hasFodSupport(mContext) && mIsFingerprintRunning;
+        return FodUtils.hasFodSupport(mContext) && mIsFingerprintRunning;
     }
 
     public boolean isLeftVoiceAssist() {

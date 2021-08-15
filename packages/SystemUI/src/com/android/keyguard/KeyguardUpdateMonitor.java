@@ -1623,8 +1623,6 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
         mSubscriptionManager = SubscriptionManager.from(context);
         mDeviceProvisioned = isDeviceProvisionedInSettingsDb();
         mStrongAuthTracker = new StrongAuthTracker(context, this::notifyStrongAuthStateChanged);
-        mFingerprintWakeAndUnlock = mContext.getResources().getBoolean(
-                com.android.systemui.R.bool.config_fingerprintWakeAndUnlock);
         mFaceAuthOnlyOnSecurityView = mContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_faceAuthOnlyOnSecurityView);
         mFingerprintWakeAndUnlock = Settings.System.getIntForUser(
@@ -1888,7 +1886,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
                 }
             }
         }
-        Dependency.get(SyberiaSettingsService.class).addIntObserver(this, Settings.System.FP_WAKE_UNLOCK);
+        Dependency.get(OmniSettingsService.class).addIntObserver(this, Settings.System.FP_WAKE_UNLOCK);
     }
 
     @Override

@@ -29,6 +29,7 @@ import android.annotation.StringRes;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.hardware.biometrics.BiometricPrompt;
 import android.os.Bundle;
@@ -63,6 +64,8 @@ import java.util.List;
 public abstract class AuthBiometricView extends LinearLayout {
 
     private static final String TAG = "BiometricPrompt/AuthBiometricView";
+
+    private static final String FOD = "vendor.lineage.biometrics.fingerprint.inscreen";
 
     /**
      * Authentication hardware idle.
@@ -205,6 +208,8 @@ public abstract class AuthBiometricView extends LinearLayout {
 
     protected boolean mHasFod;
 
+    protected final PackageManager mPackageManager;
+
     /**
      * Delay after authentication is confirmed, before the dialog should be animated away.
      */
@@ -226,12 +231,6 @@ public abstract class AuthBiometricView extends LinearLayout {
      * @return true if the dialog supports {@link AuthDialog.DialogSize#SIZE_SMALL}
      */
     protected abstract boolean supportsSmallDialog();
-
-    /**
-     * @return string resource which is appended to the negative text
-     */
-    @StringRes
-    protected abstract int getDescriptionTextId();
 
     private final Runnable mResetErrorRunnable;
 
@@ -270,6 +269,9 @@ public abstract class AuthBiometricView extends LinearLayout {
 
         mInjector = injector;
         mInjector.mBiometricView = this;
+
+        mPackageManager = context.getPackageManager();
+        mHasFod = mPackageManager.hasSystemFeature(FOD);
 
         mAccessibilityManager = context.getSystemService(AccessibilityManager.class);
 
@@ -730,25 +732,26 @@ public abstract class AuthBiometricView extends LinearLayout {
             setTextOrHide(mDescriptionView,
                     mBiometricPromptBundle.getString(BiometricPrompt.KEY_DESCRIPTION));
         } else {
-            ApplicationInfo aInfo = null;
+            Drawable icon = null;
             try {
-                aInfo = mPackageManager.getApplicationInfoAsUser(applockPackage.toString(), 0, mUserId);
+                icon = mPackageManager.getApplicationIcon(
+                    mPackageManager.getApplicationInfoAsUser(applockPackage.toString(), 0, mUserId));
             } catch(PackageManager.NameNotFoundException e) {
                 // ignored
             }
-            Drawable icon = (aInfo == null) ? null : mPackageManager.getApplicationIcon(aInfo);
-            if (icon == null) {
-                mTitleView.setVisibility(View.VISIBLE);
-                setText(mTitleView, getResources().getString(R.string.applock_unlock) + " "
-                        + mBiometricPromptBundle.getString(BiometricPrompt.KEY_TITLE));
-            } else {
-                mTitleView.setVisibility(View.GONE);
-                mAppIcon.setVisibility(View.VISIBLE);
-                mAppIcon.setImageDrawable(icon);
+            if (icon == null){
+                try {
+                    icon = mPackageManager.getApplicationIcon(
+                        mPackageManager.getApplicationInfoAsUser("android", 0, mUserId));
+                } catch(PackageManager.NameNotFoundException e) {
+                    // ignored
+                }
             }
+            mTitleView.setVisibility(View.GONE);
+            mAppIcon.setVisibility(View.VISIBLE);
+            mAppIcon.setImageDrawable(icon);
             setTextOrHide(mDescriptionView, mBiometricPromptBundle.getString(BiometricPrompt.KEY_DESCRIPTION)
-                    + getResources().getString(R.string.applock_locked) + "\n"
-                    + negativeText + getResources().getString(getDescriptionTextId()));
+                    + "\n" + getResources().getString(R.string.applock_unlock));
             mDescriptionView.setGravity(CENTER);
         }
 
